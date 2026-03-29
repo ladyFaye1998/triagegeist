@@ -1,23 +1,35 @@
 # Triagegeist: AI-Powered Emergency Triage Acuity Prediction
 
-**Multi-modal LightGBM with NLP Chief Complaint Analysis, Clinical Feature Engineering, and Demographic Bias Detection**
+**LightGBM + XGBoost Ensemble with Clinical Feature Engineering, NLP Chief Complaint Analysis & Demographic Bias Detection**
 
 Submission for the [Triagegeist Kaggle Competition](https://www.kaggle.com/competitions/triagegeist/) by the Laitinen-Fredriksson Foundation.
+
+**[Live Demo](https://ladyfaye1998.github.io/triagegeist/)** | **[Kaggle Notebook](https://www.kaggle.com/code/ladyfaye/triagegeist-triage-acuity-prediction)** | **[Writeup](writeup.md)**
 
 ---
 
 ## Overview
 
-This project builds a clinical decision support system that predicts Emergency Severity Index (ESI) triage acuity levels (1–5) from structured patient intake data, free-text chief complaints, and patient medical history. The system achieves **~97% accuracy** and **0.987 quadratic weighted kappa** on 5-fold cross-validation.
+This project builds a clinical decision support system that predicts Emergency Severity Index (ESI) triage acuity levels (1–5) from structured patient intake data, free-text chief complaints, and patient medical history.
+
+### Results
+
+| Model | Accuracy | Weighted F1 | QWK |
+|:------|:--------:|:-----------:|:---:|
+| LightGBM | 99.49% | — | 0.9975 |
+| XGBoost | 99.36% | — | 0.9969 |
+| **Ensemble** | **99.47%** | **99.47%** | **0.9974** |
 
 ### Key Features
 
 - **Multi-table data fusion** — Combines vitals, demographics, NLP text, and 25 comorbidity flags
-- **Clinical feature engineering** — Vital sign abnormality flags, composite risk scores, cardiovascular burden index
-- **NLP pipeline** — TF-IDF on chief complaint free text captures high-risk presentation keywords
-- **LightGBM with 5-fold stratified CV** — Gradient boosting handles mixed types and missing data natively
+- **50+ clinical features** — Vital sign abnormality flags, qSOFA, SIRS criteria, cardiovascular risk scores
+- **NLP pipeline** — TF-IDF (150 features) + 16 critical keyword regex flags on chief complaint text
+- **LightGBM + XGBoost ensemble** — Optimized blending weights via OOF grid search
+- **Target encoding** — Out-of-fold target encoding for nurse and site IDs (captures inter-rater variability)
 - **SHAP interpretability** — Feature-level explanations a clinician can audit
-- **Demographic bias analysis** — Systematic over/under-triage detection across sex, age, language, insurance
+- **Comprehensive bias analysis** — Statistical testing across 5 demographic dimensions + intersectional subgroups
+- **Interactive demo** — Browser-based triage prediction at [ladyfaye1998.github.io/triagegeist](https://ladyfaye1998.github.io/triagegeist/)
 
 ## Project Structure
 
@@ -35,11 +47,15 @@ triagegeist/
 │   ├── config.py                  # Central configuration
 │   ├── data_loader.py             # Data loading & merging pipeline
 │   ├── feature_engineering.py     # Clinical feature engineering + NLP
-│   ├── model.py                   # LightGBM training & prediction
+│   ├── model.py                   # Model training & prediction
 │   └── analysis.py                # Bias analysis & interpretability
-├── outputs/                       # Generated predictions & figures
-├── assets/                        # Cover image and media
+├── docs/
+│   └── index.html                 # Interactive GitHub Pages demo
+├── assets/
+│   └── cover_560x280.png          # Competition cover image
+├── outputs/                       # Generated predictions & logs
 ├── writeup.md                     # Competition writeup
+├── validate_pipeline.py           # End-to-end validation script
 ├── requirements.txt               # Python dependencies
 └── README.md
 ```
@@ -61,36 +77,39 @@ jupyter notebook triagegeist-triage-acuity-prediction.ipynb
 
 The notebook auto-detects Kaggle vs local paths. Place competition data in `data/` for local execution.
 
-## Results
+### Run Validation
 
-| Metric | Score |
-|:-------|------:|
-| Accuracy | ~97% |
-| Weighted F1 | ~97% |
-| Quadratic Weighted Kappa | ~0.987 |
+```bash
+python validate_pipeline.py
+```
 
-### Top Predictive Features
+## Feature Engineering
 
-1. NEWS2 Score — Aggregate early warning score
-2. GCS Total — Glasgow Coma Scale
-3. Shock Index — Heart rate / systolic BP
-4. Pain Score — Patient-reported pain intensity
-5. Heart Rate — Tachycardia/bradycardia signal
+276 total features across 6 categories:
+
+| Category | Count | Examples |
+|:---------|------:|:--------|
+| Categorical | 12 | arrival_mode, mental_status, chief_complaint_system |
+| Numeric (vitals) | 22 | heart_rate, systolic_bp, spo2, news2_score |
+| Patient history | 25 | hx_hypertension, hx_diabetes_type2, hx_copd |
+| Clinical flags | 50+ | qSOFA score, SIRS count, vital abnormality flags, risk composites |
+| NLP (TF-IDF) | 150 | Chief complaint unigrams + bigrams |
+| NLP (keywords) | 16 | chest_pain, seizure, stroke, suicidal, respiratory_distress |
 
 ## Clinical Relevance
 
-The model addresses real gaps in emergency triage:
-
-- **Undertriage detection** — Flags patients assigned lower acuity who may need urgent care
-- **Bias monitoring** — Surfaces systematic differences in triage across demographics
-- **Decision support** — Provides a quantitative second opinion alongside clinical judgment
+- **Undertriage detection** — Identifies ESI 4-5 patients who should be ESI 1-3
+- **Inter-rater variability** — Target-encoded nurse IDs confirm systematic scoring differences
+- **Bias monitoring** — Chi-squared tests show statistically significant accuracy differences across demographics
+- **Interpretable** — SHAP explanations map predictions to clinical decision points
 
 ## Limitations
 
-1. Trained on synthetic/competition data; requires validation on real clinical data (e.g., MIMIC-IV-ED)
-2. TF-IDF NLP is basic; ClinicalBERT would capture richer semantics
-3. No temporal validation (time-based splits would better simulate deployment)
-4. Predicted probabilities are not calibrated for clinical decision thresholds
+1. Trained on synthetic/competition data; requires real-world validation (MIMIC-IV-ED)
+2. NEWS2 as a feature may partially encode existing triage decisions
+3. TF-IDF NLP is basic; ClinicalBERT would improve semantic understanding
+4. No temporal or external validation
+5. Predicted probabilities are not calibrated
 
 ## License
 
@@ -98,4 +117,4 @@ MIT
 
 ## Author
 
-[ladyFaye1998](https://www.kaggle.com/ladyfaye) — Kaggle profile
+[ladyFaye1998](https://www.kaggle.com/ladyfaye)
