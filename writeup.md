@@ -1,57 +1,84 @@
-## Triagegeist: Multi-Modal Triage Acuity Prediction with Clinical Feature Engineering and Bias Detection
+# Triagegeist: Multi-Modal Emergency Triage Acuity Prediction with Clinical Feature Engineering and Demographic Bias Detection
 
-### Clinical Problem Statement
+## Clinical Problem Statement
 
-Emergency department triage assigns patients to severity levels that determine treatment priority. The Emergency Severity Index (ESI) system, used in most US and European EDs, assigns levels 1 (resuscitation) through 5 (non-urgent). Despite standardized protocols, inter-rater reliability for ESI ranges from kappa 0.60–0.80, with documented systematic undertriage of elderly patients, non-English speakers, and patients presenting with atypical symptoms.
+Every minute counts in the emergency department. Triage nurses assign patients to Emergency Severity Index (ESI) levels 1–5 that determine treatment priority — and errors in this assignment directly threaten patient safety. Inter-rater variability for ESI scoring is well-documented (kappa 0.60–0.80), with systematic undertriage of elderly patients and atypical presentations.
 
-Undertriage — assigning a lower acuity than warranted — is a direct patient safety threat. A patient incorrectly triaged as ESI 4 instead of ESI 2 may wait hours for care that should begin in minutes. This project builds an AI-powered decision support model that predicts ESI acuity from structured intake data, free-text chief complaints, and patient medical history, with an emphasis on identifying systematic bias patterns.
+**Undertriage** — assigning a lower acuity than clinically warranted — is the critical safety concern. A patient incorrectly triaged as ESI 4 instead of ESI 2 may wait hours for care that should begin immediately. This project builds an AI-powered decision support model that predicts ESI triage acuity and identifies systematic bias patterns across demographic groups.
 
-### Methodology
+## Methodology
 
-**Data Fusion.** The model integrates three data sources: (1) structured triage data with vitals, demographics, and arrival information (80,000 training / 20,000 test patients), (2) free-text chief complaint descriptions, and (3) binary patient comorbidity history across 25 conditions.
+### Data Fusion
+We integrate three competition data sources on `patient_id`:
+- **Structured intake** (80,000 train / 20,000 test): vitals, demographics, arrival context, ED utilization
+- **Chief complaints** (100,000 records): free-text clinical presentations and body system categories
+- **Patient history** (100,000 records): 25 binary comorbidity flags (hypertension, diabetes, COPD, etc.)
 
-**Clinical Feature Engineering.** We engineer 28 clinically-motivated features grounded in emergency medicine literature:
-- *Vital sign abnormality flags* — Binary indicators for hypotension (SBP <90), tachycardia (HR >100), hypoxia (SpO2 <92), fever (T >38°C), altered mental status (GCS <15), and 6 additional abnormality states. These directly correspond to ESI decision branch points.
-- *Composite risk scores* — `num_abnormal_vitals` (aggregate vital sign burden), `cv_risk_score` (cardiovascular comorbidity burden), `comorbidity_burden` (total active comorbidities).
-- *Age-vital interactions* — `age × shock_index`, `age × NEWS2` capture the clinical principle that elderly patients decompensate faster for equivalent vital sign derangements.
-- *Temporal features* — Cyclical encoding of arrival hour and month, plus weekend and night-shift flags, reflecting known temporal patterns in ED acuity distribution.
+### Clinical Feature Engineering (50+ features)
+Features are grounded in emergency medicine literature:
 
-**NLP Pipeline.** Chief complaint free text is encoded via TF-IDF (100 features, unigrams + bigrams) to capture high-risk presentation keywords (e.g., "chest pain," "seizure," "shortness of breath").
+- **Vital sign abnormality flags** (18 flags): Hypotension (SBP<90), severe tachycardia (HR>130), hypoxia (SpO2<92), severe GCS (≤8), etc. These map directly to ESI decision branch points (Gilboy et al., 2020).
+- **qSOFA score** (0–3): SBP≤100, RR≥22, GCS<15 — sepsis screening per Sepsis-3 guidelines (Singer et al., 2016).
+- **SIRS approximation**: Temperature/HR/RR abnormality count for systemic inflammatory response detection.
+- **Composite risk scores**: Cardiovascular burden (6 conditions), respiratory risk (asthma+COPD), metabolic risk, psychiatric risk.
+- **Age-vital interactions**: `age × shock_index`, `age × NEWS2`, `age × qSOFA` — capturing the clinical principle that elderly patients decompensate faster for equivalent vital sign derangements.
+- **Critical NLP keyword flags** (16 patterns): Regex-based detection of high-risk presentations (chest pain, seizure, stroke, suicidal ideation, respiratory distress, GI bleed, etc.) with clinical urgency mapping.
+- **TF-IDF** (150 features): Sublinear TF-IDF with unigram+bigram encoding of chief complaint free text.
+- **Target-encoded IDs**: Out-of-fold target encoding for nurse ID and site ID, capturing systematic inter-rater variability without leakage.
+- **Temporal features**: Cyclical encoding of arrival hour/month, weekend and night-shift flags.
 
-**Model.** LightGBM gradient boosting with 5-fold stratified cross-validation. LightGBM was chosen for its native handling of mixed feature types, internal missing value management (relevant for ~5% missing BP data), and strong baseline performance on tabular data. Early stopping at 100 rounds prevents overfitting.
+### Model Architecture
+- **LightGBM**: 3,000 estimators, learning rate 0.03, 127 leaves, early stopping at 150 rounds
+- **XGBoost**: 2,000 estimators, learning rate 0.03, max depth 8, early stopping
+- **Ensemble**: Weighted average with weights optimized via grid search on OOF predictions
+- **Validation**: 5-fold stratified cross-validation, evaluated on accuracy, weighted F1, and quadratic weighted kappa (QWK)
 
-### Results
+## Results
 
-The model achieves **~97% accuracy**, **~97% weighted F1**, and **0.987 quadratic weighted kappa** on out-of-fold predictions across all 80,000 training patients. QWK is particularly appropriate for ordinal triage acuity since it penalizes large misclassifications (e.g., predicting ESI 5 for a true ESI 1) more heavily than adjacent errors.
+The ensemble model achieves strong out-of-fold performance across all 80,000 training patients:
 
-**Top predictive features**: NEWS2 score, GCS total, shock index, pain score, heart rate, and triage nurse ID. The strong predictive power of NEWS2 is clinically expected — it is itself an aggregate early warning score. Triage nurse ID appearing in the top features suggests systematic inter-rater variability, confirming the problem this tool aims to address.
+| Metric | Score |
+|:-------|------:|
+| Accuracy | ~97% |
+| Weighted F1 | ~97% |
+| Quadratic Weighted Kappa | ~0.98 |
 
-**Chief complaint NLP** adds meaningful signal beyond structured vitals, with terms related to pain, cardiac symptoms, and neurological presentations ranking highly.
+**Top predictive features**: NEWS2 score (r = −0.81 with acuity), GCS total, shock index, pain score, heart rate, triage nurse ID target encoding. NEWS2 being the strongest predictor validates the National Early Warning Score as an effective triage tool.
 
-### Bias Analysis
+**Chief complaint NLP** adds meaningful signal: terms related to cardiac symptoms, neurological presentations, and trauma rank highly in feature importance. The 16 critical keyword flags capture domain knowledge that pure statistical features miss.
 
-Demographic bias analysis on out-of-fold predictions reveals systematic patterns:
-- The model's undertriage and overtriage rates are analyzed across sex, age group, language, and insurance type
-- Bias delta (mean predicted − mean actual acuity) quantifies systematic shifts
-- The analysis provides a framework for ongoing fairness monitoring in clinical deployment
+**Triage nurse variability**: Mean assigned acuity ranges substantially across the 50 nurses in the dataset, confirming the documented inter-rater variability that motivates clinical decision support.
 
-### Limitations
+## Bias Analysis
 
-1. **Synthetic data** — Performance metrics on competition data may not transfer to real clinical environments. Validation against MIMIC-IV-ED or equivalent real-world data is essential before clinical use.
-2. **NLP depth** — TF-IDF captures keyword-level signal but misses semantic nuance; transformer-based models (ClinicalBERT, BioGPT) could improve chief complaint understanding.
-3. **No temporal validation** — We use random stratified splits rather than time-based splits, which would better simulate prospective deployment.
-4. **Calibration** — Predicted probabilities are not calibrated; probability thresholds for clinical decision rules would require Platt scaling or isotonic regression.
-5. **NEWS2 leakage** — The NEWS2 score is itself a clinical scoring system and may partially encode triage decisions.
+We perform comprehensive demographic bias analysis with statistical significance testing:
 
-### Reproducibility
+- **Bias delta** (mean predicted − mean actual acuity) quantifies systematic over/under-triage per group
+- **Chi-squared tests** for accuracy differences across sex, age group, language, and insurance type
+- **Intersectional analysis**: Identifying highest-risk subgroups at the intersection of sex × age × language
+- **Undertriage monitoring by actual acuity**: Tracking the rate at which truly urgent (ESI 1–2) patients are predicted as less urgent — the most dangerous error mode
 
-- **Kaggle Notebook**: Public, runs end-to-end without errors in under 3 minutes
-- **GitHub Repository**: Full source code, modular architecture, README with setup instructions
+## Limitations
+
+1. **Synthetic data**: Performance on competition data may not transfer to real clinical environments. Validation against MIMIC-IV-ED is essential before clinical use.
+2. **NEWS2 as feature**: NEWS2 is itself a clinical scoring system and may partially encode existing triage decisions, inflating apparent model performance.
+3. **NLP depth**: TF-IDF captures keyword signal but misses semantic nuance; ClinicalBERT would improve chief complaint understanding.
+4. **No temporal validation**: Random splits rather than time-based splits; prospective deployment simulation would require chronological holdout.
+5. **No probability calibration**: Platt scaling or isotonic regression needed for clinical decision thresholds.
+6. **No external validation**: Unknown generalization to other institutions or healthcare systems.
+
+## Reproducibility
+
+- **Kaggle Notebook**: Public, runs end-to-end in ~5 minutes
+- **GitHub Repository**: [github.com/ladyFaye1998/triagegeist](https://github.com/ladyFaye1998/triagegeist) — full source code, modular architecture, README with setup instructions
+- **Interactive Demo**: [GitHub Pages](https://ladyfaye1998.github.io/triagegeist/) — browser-based triage prediction simulator
 - **Random seed 42** fixed for all stochastic operations
-- **All datasets cited** and described in the notebook
+- **All datasets cited**: Competition-provided data from the Laitinen-Fredriksson Foundation
 
-### References
+## References
 
-- Gilboy, N., et al. (2020). Emergency Severity Index (ESI): A Triage Tool for Emergency Department Care. AHRQ.
-- Royal College of Physicians (2017). National Early Warning Score (NEWS) 2: Standardising the assessment of acute-illness severity in the NHS.
-- Fernandes, M., et al. (2020). Clinical Decision Support Systems for Triage in the Emergency Department using Intelligent Systems. Artificial Intelligence in Medicine.
+- Gilboy, N. et al. (2020). *Emergency Severity Index (ESI): A Triage Tool for Emergency Department Care, Version 4*. AHRQ Publication No. 20-0045.
+- Singer, M. et al. (2016). *The Third International Consensus Definitions for Sepsis and Septic Shock (Sepsis-3)*. JAMA, 315(8), 801–810.
+- Royal College of Physicians (2017). *National Early Warning Score (NEWS) 2: Standardising the assessment of acute-illness severity in the NHS*.
+- Fernandes, M. et al. (2020). *Clinical Decision Support Systems for Triage in the Emergency Department using Intelligent Systems: A Review*. Artificial Intelligence in Medicine, 102, 101762.
+- Obermeyer, Z. et al. (2019). *Dissecting racial bias in an algorithm used to manage the health of populations*. Science, 366(6464), 447–453.

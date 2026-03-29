@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Triagegeist — AI Emergency Triage Demo</title>
+<style>
+  :root {
+    --esi1: #c62828; --esi2: #ef6c00; --esi3: #f9a825; --esi4: #2e7d32; --esi5: #1565c0;
+    --bg: #f5f7fa; --card: #ffffff; --text: #1a1a2e; --muted: #6b7280;
+    --border: #e5e7eb; --accent: #1565c0; --shadow: rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+  header h1 span { color: var(--accent); }
+  header p { color: var(--muted); font-size: 1.05rem; max-width: 700px; margin: 0 auto; }
+  .badges { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.8rem; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.78rem;
+           font-weight: 600; background: #e3f2fd; color: var(--accent); }
+  .badge.red { background: #fce4ec; color: #c62828; }
+  .badge.green { background: #e8f5e9; color: #2e7d32; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+  @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card); border-radius: 12px; padding: 1.5rem;
+          box-shadow: 0 2px 8px var(--shadow); border: 1px solid var(--border); }
+  .card h2 { font-size: 1.1rem; margin-bottom: 1rem; color: var(--accent); }
+
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--muted); }
+  select, input[type="number"], input[type="text"], input[type="range"] {
+    width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.95rem; background: #fafbfc; outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.6rem; }
+  .form-group { margin-bottom: 0.6rem; }
+
+  .range-row { display: flex; align-items: center; gap: 0.5rem; }
+  .range-val { min-width: 3rem; text-align: center; font-weight: 700; font-size: 1rem; }
+
+  #predict-btn { display: block; width: 100%; padding: 0.9rem; margin-top: 1.2rem;
+    background: linear-gradient(135deg, var(--accent), #0d47a1); color: white;
+    border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; letter-spacing: 0.5px; }
+  #predict-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(21,101,192,0.35); }
+
+  #result-panel { display: none; margin-top: 1.5rem; }
+  .esi-result { text-align: center; padding: 2rem; border-radius: 12px; color: white; position: relative; }
+  .esi-result .level { font-size: 4rem; font-weight: 800; }
+  .esi-result .name { font-size: 1.4rem; font-weight: 600; opacity: 0.95; }
+  .esi-result .desc { font-size: 0.9rem; opacity: 0.8; margin-top: 0.3rem; }
+
+  .prob-bars { margin-top: 1.2rem; }
+  .prob-bar-row { display: flex; align-items: center; margin-bottom: 0.5rem; gap: 0.5rem; }
+  .prob-label { min-width: 110px; font-size: 0.85rem; font-weight: 600; }
+  .prob-track { flex: 1; height: 22px; background: #f0f0f0; border-radius: 6px; overflow: hidden; position: relative; }
+  .prob-fill { height: 100%; border-radius: 6px; transition: width 0.6s ease; display: flex; align-items: center;
+               justify-content: flex-end; padding-right: 6px; color: white; font-size: 0.75rem; font-weight: 700; }
+
+  .flags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .flag { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 600; }
+  .flag.danger { background: #fce4ec; color: #c62828; }
+  .flag.warn { background: #fff3e0; color: #e65100; }
+  .flag.ok { background: #e8f5e9; color: #2e7d32; }
+
+  .methodology { background: var(--card); border-radius: 12px; padding: 1.5rem 2rem;
+                 box-shadow: 0 2px 8px var(--shadow); border: 1px solid var(--border); margin-bottom: 2rem; }
+  .methodology h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 0.8rem; }
+  .methodology p { color: var(--muted); font-size: 0.92rem; margin-bottom: 0.5rem; }
+  .methodology table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; }
+  .methodology th, .methodology td { padding: 0.5rem 0.8rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+  .methodology th { background: #f8f9fa; font-weight: 600; }
+
+  footer { text-align: center; margin-top: 2rem; color: var(--muted); font-size: 0.85rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><span>Triagegeist</span> — AI Emergency Triage</h1>
+    <p>Interactive clinical decision support demo. Enter patient data to predict ESI triage acuity.</p>
+    <div class="badges">
+      <span class="badge">LightGBM + XGBoost Ensemble</span>
+      <span class="badge green">~97% Accuracy</span>
+      <span class="badge">0.98+ QWK</span>
+      <span class="badge red">Bias Monitoring</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Vital Signs</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Heart Rate (bpm)</label>
+          <div class="range-row">
+            <input type="range" id="heart_rate" min="30" max="200" value="88" oninput="updateVal(this)">
+            <span class="range-val" id="heart_rate_val">88</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Systolic BP (mmHg)</label>
+          <div class="range-row">
+            <input type="range" id="systolic_bp" min="50" max="220" value="120" oninput="updateVal(this)">
+            <span class="range-val" id="systolic_bp_val">120</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Respiratory Rate (/min)</label>
+          <div class="range-row">
+            <input type="range" id="respiratory_rate" min="8" max="50" value="16" oninput="updateVal(this)">
+            <span class="range-val" id="respiratory_rate_val">16</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Temperature (°C)</label>
+          <div class="range-row">
+            <input type="range" id="temperature_c" min="350" max="420" value="370" oninput="updateTemp(this)">
+            <span class="range-val" id="temperature_c_val">37.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>SpO2 (%)</label>
+          <div class="range-row">
+            <input type="range" id="spo2" min="60" max="100" value="97" oninput="updateVal(this)">
+            <span class="range-val" id="spo2_val">97</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>GCS Total (3–15)</label>
+          <div class="range-row">
+            <input type="range" id="gcs_total" min="3" max="15" value="15" oninput="updateVal(this)">
+            <span class="range-val" id="gcs_total_val">15</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Pain Score (0–10)</label>
+          <div class="range-row">
+            <input type="range" id="pain_score" min="0" max="10" value="3" oninput="updateVal(this)">
+            <span class="range-val" id="pain_score_val">3</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>NEWS2 Score (0–17)</label>
+          <div class="range-row">
+            <input type="range" id="news2_score" min="0" max="17" value="2" oninput="updateVal(this)">
+            <span class="range-val" id="news2_score_val">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Patient Demographics & History</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Age</label>
+          <input type="number" id="age" value="45" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label>Mental Status</label>
+          <select id="mental_status">
+            <option value="alert">Alert</option>
+            <option value="confused">Confused</option>
+            <option value="agitated">Agitated</option>
+            <option value="drowsy">Drowsy</option>
+            <option value="unresponsive">Unresponsive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Arrival Mode</label>
+          <select id="arrival_mode">
+            <option value="walk-in">Walk-in</option>
+            <option value="ambulance">Ambulance</option>
+            <option value="helicopter">Helicopter</option>
+            <option value="transfer">Transfer</option>
+            <option value="brought_by_family">Family</option>
+            <option value="police">Police</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Prior ED Visits (12mo)</label>
+          <input type="number" id="ed_visits" value="0" min="0" max="15">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Chief Complaint</label>
+        <input type="text" id="chief_complaint" placeholder="e.g. chest pain, shortness of breath, headache..." value="">
+      </div>
+      <div class="form-group">
+        <label>Comorbidities</label>
+        <select id="num_comorbidities">
+          <option value="0">None</option>
+          <option value="2">1-2 conditions</option>
+          <option value="5">3-5 conditions</option>
+          <option value="8" selected>6-8 conditions</option>
+          <option value="12">9+ conditions</option>
+        </select>
+      </div>
+
+      <button id="predict-btn" onclick="predict()">Predict Triage Acuity</button>
+    </div>
+  </div>
+
+  <div id="result-panel">
+    <div class="card">
+      <div class="esi-result" id="esi-result">
+        <div class="level" id="esi-level">—</div>
+        <div class="name" id="esi-name">—</div>
+        <div class="desc" id="esi-desc">—</div>
+      </div>
+
+      <div class="prob-bars" id="prob-bars"></div>
+      <div class="flags" id="flags"></div>
+    </div>
+  </div>
+
+  <div class="methodology">
+    <h2>How It Works</h2>
+    <p>This demo simulates the ensemble model's decision process using a rule-based approximation of the trained LightGBM + XGBoost pipeline. The actual model uses 250+ features including TF-IDF NLP features — this interactive version uses the top clinical predictors.</p>
+    <table>
+      <tr><th>Component</th><th>Details</th></tr>
+      <tr><td>Models</td><td>LightGBM + XGBoost ensemble, 5-fold stratified CV</td></tr>
+      <tr><td>Features</td><td>250+ (vitals, demographics, NLP, comorbidity history, qSOFA, SIRS)</td></tr>
+      <tr><td>OOF Performance</td><td>~97% accuracy, ~0.98 QWK</td></tr>
+      <tr><td>Bias Analysis</td><td>5 demographic dimensions, intersectional subgroup analysis</td></tr>
+      <tr><td>NLP Pipeline</td><td>TF-IDF (150 features) + 16 critical keyword flags</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    <p>Built for <a href="https://www.kaggle.com/competitions/triagegeist">Triagegeist</a> by the Laitinen-Fredriksson Foundation &middot;
+    <a href="https://github.com/ladyFaye1998/triagegeist">GitHub</a> &middot;
+    <a href="https://www.kaggle.com/ladyfaye">Kaggle</a></p>
+    <p style="margin-top:0.4rem; font-size:0.8rem;">For research purposes only. Not for clinical use without validation.</p>
+  </footer>
+</div>
+
+<script>
+const ESI = {
+  1: { name: 'Resuscitation', color: '#c62828', desc: 'Immediate life-saving intervention required' },
+  2: { name: 'Emergent',      color: '#ef6c00', desc: 'High risk — requires rapid evaluation' },
+  3: { name: 'Urgent',        color: '#f9a825', desc: 'Multiple resources needed — stable' },
+  4: { name: 'Less Urgent',   color: '#2e7d32', desc: 'One resource needed' },
+  5: { name: 'Non-Urgent',    color: '#1565c0', desc: 'No resources needed — routine care' },
+};
+
+function updateVal(el) { document.getElementById(el.id + '_val').textContent = el.value; }
+function updateTemp(el) { document.getElementById(el.id + '_val').textContent = (el.value / 10).toFixed(1); }
+
+function predict() {
+  const hr    = +document.getElementById('heart_rate').value;
+  const sbp   = +document.getElementById('systolic_bp').value;
+  const rr    = +document.getElementById('respiratory_rate').value;
+  const temp  = +document.getElementById('temperature_c').value / 10;
+  const spo2  = +document.getElementById('spo2').value;
+  const gcs   = +document.getElementById('gcs_total').value;
+  const pain  = +document.getElementById('pain_score').value;
+  const news2 = +document.getElementById('news2_score').value;
+  const age   = +document.getElementById('age').value;
+  const mental = document.getElementById('mental_status').value;
+  const mode  = document.getElementById('arrival_mode').value;
+  const edVisits = +document.getElementById('ed_visits').value;
+  const cc    = document.getElementById('chief_complaint').value.toLowerCase();
+  const comorb = +document.getElementById('num_comorbidities').value;
+
+  const si = hr / Math.max(sbp, 1);
+  const qsofa = (sbp <= 100 ? 1 : 0) + (rr >= 22 ? 1 : 0) + (gcs < 15 ? 1 : 0);
+
+  const critKW = ['chest pain','seizure','stroke','cardiac arrest','anaphylax','sepsis',
+                  'unresponsive','overdose','suicid','respiratory distress','shortness of breath'];
+  const hasCrit = critKW.some(k => cc.includes(k));
+  const mildKW = ['advice','follow up','prescription','refill','check up','minor'];
+  const hasMild = mildKW.some(k => cc.includes(k));
+
+  let scores = [0, 0, 0, 0, 0]; // ESI 1-5
+
+  // NEWS2 — strongest predictor
+  if (news2 >= 12) { scores[0] += 6; scores[1] += 3; }
+  else if (news2 >= 8) { scores[0] += 3; scores[1] += 5; scores[2] += 2; }
+  else if (news2 >= 5) { scores[1] += 3; scores[2] += 5; scores[3] += 1; }
+  else if (news2 >= 2) { scores[2] += 3; scores[3] += 5; scores[4] += 2; }
+  else { scores[3] += 3; scores[4] += 6; }
+
+  // Mental status
+  if (mental === 'unresponsive') { scores[0] += 7; scores[1] += 3; }
+  else if (mental === 'drowsy') { scores[0] += 2; scores[1] += 5; scores[2] += 2; }
+  else if (mental === 'agitated') { scores[1] += 3; scores[2] += 4; }
+  else if (mental === 'confused') { scores[1] += 2; scores[2] += 5; scores[3] += 1; }
+  else { scores[2] += 1; scores[3] += 4; scores[4] += 4; }
+
+  // GCS
+  if (gcs <= 8) { scores[0] += 6; scores[1] += 2; }
+  else if (gcs <= 12) { scores[0] += 2; scores[1] += 4; scores[2] += 2; }
+  else if (gcs < 15) { scores[1] += 2; scores[2] += 3; }
+
+  // SpO2
+  if (spo2 < 88) { scores[0] += 4; scores[1] += 2; }
+  else if (spo2 < 92) { scores[1] += 3; scores[2] += 2; }
+  else if (spo2 < 95) { scores[2] += 2; scores[3] += 1; }
+  else { scores[3] += 1; scores[4] += 2; }
+
+  // Shock index
+  if (si > 1.3) { scores[0] += 4; scores[1] += 2; }
+  else if (si > 1.0) { scores[0] += 2; scores[1] += 3; scores[2] += 1; }
+  else if (si > 0.7) { scores[2] += 2; scores[3] += 2; }
+  else { scores[3] += 1; scores[4] += 2; }
+
+  // Pain
+  if (pain >= 8) { scores[1] += 2; scores[2] += 3; }
+  else if (pain >= 5) { scores[2] += 2; scores[3] += 2; }
+  else { scores[3] += 1; scores[4] += 2; }
+
+  // Temperature
+  if (temp < 35.5 || temp > 39.5) { scores[0] += 2; scores[1] += 3; }
+  else if (temp < 36 || temp > 38.5) { scores[1] += 1; scores[2] += 3; }
+
+  // Respiratory rate
+  if (rr > 30) { scores[0] += 3; scores[1] += 2; }
+  else if (rr > 22) { scores[1] += 2; scores[2] += 2; }
+  else if (rr > 20) { scores[2] += 2; }
+
+  // qSOFA
+  if (qsofa >= 2) { scores[0] += 3; scores[1] += 2; }
+  else if (qsofa === 1) { scores[1] += 1; scores[2] += 2; }
+
+  // ED utilization
+  if (edVisits >= 4) { scores[1] += 1; scores[2] += 2; }
+
+  // Chief complaint keywords
+  if (hasCrit) { scores[0] += 2; scores[1] += 3; scores[2] += 1; }
+  if (hasMild) { scores[3] += 2; scores[4] += 3; }
+
+  // Age
+  if (age > 75 && comorb >= 5) { scores[0] += 1; scores[1] += 2; }
+
+  // SBP extremes
+  if (sbp < 70) { scores[0] += 4; }
+  else if (sbp < 90) { scores[0] += 2; scores[1] += 2; }
+  else if (sbp > 180) { scores[1] += 2; scores[2] += 1; }
+
+  // Heart rate
+  if (hr > 130) { scores[0] += 2; scores[1] += 2; }
+  else if (hr > 100) { scores[1] += 1; scores[2] += 2; }
+  else if (hr < 50) { scores[1] += 2; scores[2] += 1; }
+
+  // Normalize to probabilities
+  const total = scores.reduce((a, b) => a + b, 0) || 1;
+  const probs = scores.map(s => s / total);
+  const predicted = probs.indexOf(Math.max(...probs)) + 1;
+  const info = ESI[predicted];
+
+  // Display result
+  document.getElementById('result-panel').style.display = 'block';
+  const resultDiv = document.getElementById('esi-result');
+  resultDiv.style.background = `linear-gradient(135deg, ${info.color}, ${info.color}dd)`;
+  document.getElementById('esi-level').textContent = `ESI ${predicted}`;
+  document.getElementById('esi-name').textContent = info.name;
+  document.getElementById('esi-desc').textContent = info.desc;
+
+  // Probability bars
+  let barsHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const pct = (probs[i] * 100).toFixed(1);
+    const w = Math.max(probs[i] * 100, 2);
+    barsHTML += `<div class="prob-bar-row">
+      <span class="prob-label">ESI ${i+1}: ${ESI[i+1].name}</span>
+      <div class="prob-track"><div class="prob-fill" style="width:${w}%;background:${ESI[i+1].color}">${pct}%</div></div>
+    </div>`;
+  }
+  document.getElementById('prob-bars').innerHTML = barsHTML;
+
+  // Clinical flags
+  let flagsHTML = '';
+  if (sbp < 90)  flagsHTML += '<span class="flag danger">Hypotension</span>';
+  if (sbp > 180) flagsHTML += '<span class="flag danger">Hypertensive Crisis</span>';
+  if (hr > 100)  flagsHTML += '<span class="flag warn">Tachycardia</span>';
+  if (hr > 130)  flagsHTML += '<span class="flag danger">Severe Tachycardia</span>';
+  if (hr < 60)   flagsHTML += '<span class="flag warn">Bradycardia</span>';
+  if (spo2 < 92) flagsHTML += '<span class="flag danger">Hypoxia</span>';
+  if (spo2 < 88) flagsHTML += '<span class="flag danger">Severe Hypoxia</span>';
+  if (gcs < 15)  flagsHTML += '<span class="flag warn">Altered Mental Status</span>';
+  if (gcs <= 8)  flagsHTML += '<span class="flag danger">Severe GCS</span>';
+  if (temp > 38) flagsHTML += '<span class="flag warn">Fever</span>';
+  if (temp < 36) flagsHTML += '<span class="flag warn">Hypothermia</span>';
+  if (rr > 20)   flagsHTML += '<span class="flag warn">Tachypnea</span>';
+  if (si > 1.0)  flagsHTML += '<span class="flag danger">High Shock Index</span>';
+  if (qsofa >= 2) flagsHTML += '<span class="flag danger">qSOFA ≥ 2</span>';
+  if (pain >= 8) flagsHTML += '<span class="flag warn">Severe Pain</span>';
+  if (hasCrit)   flagsHTML += '<span class="flag danger">Critical Complaint</span>';
+  if (!flagsHTML) flagsHTML = '<span class="flag ok">No critical flags detected</span>';
+  document.getElementById('flags').innerHTML = flagsHTML;
+
+  resultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+</script>
+</body>
+</html>
