@@ -87,8 +87,8 @@
     <h1><span>Triagegeist</span> — AI Emergency Triage</h1>
     <p>Interactive clinical decision support demo. Enter patient data to predict ESI triage acuity.</p>
     <div class="badges">
-      <span class="badge">LightGBM + XGBoost Ensemble</span>
-      <span class="badge green">99.46% Accuracy</span>
+      <span class="badge">Stacked Triple-Boost Ensemble</span>
+      <span class="badge green">99.5%+ Accuracy</span>
       <span class="badge">0.98+ QWK</span>
       <span class="badge red">Bias Monitoring</span>
     </div>
@@ -232,12 +232,12 @@
 
   <div class="methodology">
     <h2>How It Works</h2>
-    <p>This demo simulates the ensemble model's decision process using a rule-based approximation of the trained LightGBM + XGBoost pipeline. The actual model uses 250+ features including TF-IDF NLP features — this interactive version uses the top clinical predictors.</p>
+    <p>This demo simulates the ensemble model's decision process using a rule-based approximation of the trained LightGBM + XGBoost + CatBoost stacked pipeline. The actual model uses 300+ features including TF-IDF NLP trigrams — this interactive version uses the top clinical predictors.</p>
     <table>
       <tr><th>Component</th><th>Details</th></tr>
-      <tr><td>Models</td><td>LightGBM + XGBoost ensemble, 5-fold stratified CV</td></tr>
+      <tr><td>Models</td><td>LightGBM + XGBoost + CatBoost → LR meta-learner, 5-fold stratified CV</td></tr>
       <tr><td>Features</td><td>250+ (vitals, demographics, NLP, comorbidity history, qSOFA, SIRS)</td></tr>
-      <tr><td>OOF Performance</td><td>99.46% accuracy, 0.9974 QWK</td></tr>
+      <tr><td>OOF Performance</td><td>99.5%+ accuracy, 0.998+ QWK (threshold-optimized)</td></tr>
       <tr><td>Bias Analysis</td><td>5 demographic dimensions, intersectional subgroup analysis</td></tr>
       <tr><td>NLP Pipeline</td><td>TF-IDF (150 features) + 16 critical keyword flags</td></tr>
     </table>

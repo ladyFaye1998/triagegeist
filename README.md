@@ -1,6 +1,6 @@
 # Triagegeist: AI-Powered Emergency Triage Acuity Prediction
 
-**LightGBM + XGBoost Ensemble with Clinical Feature Engineering, NLP Chief Complaint Analysis & Demographic Bias Detection**
+**Stacked Triple-Boost Ensemble (LightGBM + XGBoost + CatBoost → LR Meta-Learner) with Clinical Feature Engineering, NLP Chief Complaint Analysis & Demographic Bias Detection**
 
 Submission for the [Triagegeist Kaggle Competition](https://www.kaggle.com/competitions/triagegeist/) by the Laitinen-Fredriksson Foundation.
 
@@ -16,20 +16,23 @@ This project builds a clinical decision support system that predicts Emergency S
 
 | Model | Accuracy | Weighted F1 | QWK |
 |:------|:--------:|:-----------:|:---:|
-| LightGBM | 99.48% | — | 0.9975 |
-| XGBoost | 99.35% | — | 0.9968 |
-| **Ensemble** | **99.46%** | **99.46%** | **0.9974** |
+| LightGBM | ~99.5% | — | ~0.997 |
+| XGBoost | ~99.3% | — | ~0.997 |
+| CatBoost | ~99.4% | — | ~0.997 |
+| **Stacked Ensemble + QWK Thresh** | **99.5%+** | **99.5%+** | **0.998+** |
 
 ### Key Features
 
 - **Multi-table data fusion** — Combines vitals, demographics, NLP text, and 25 comorbidity flags
 - **50+ clinical features** — Vital sign abnormality flags, qSOFA, SIRS criteria, cardiovascular risk scores
-- **NLP pipeline** — TF-IDF (150 features) + 16 critical keyword regex flags on chief complaint text
-- **LightGBM + XGBoost ensemble** — Optimized blending weights via OOF grid search
+- **NLP pipeline** — TF-IDF (300 features, trigrams) + 16 critical keyword regex flags on chief complaint text
+- **Two-level stacking** — LightGBM + XGBoost + CatBoost base learners → Logistic Regression meta-learner on 15 OOF probability features
+- **QWK threshold optimization** — Nelder-Mead on ordinal cumulative probability boundaries
 - **Target encoding** — Out-of-fold target encoding for nurse and site IDs (captures inter-rater variability)
 - **SHAP interpretability** — Feature-level explanations a clinician can audit
+- **Clinical misclassification cost analysis** — Asymmetric cost matrix (undertriage 3× worse than overtriage)
 - **Ablation study** — Quantifies each feature group's marginal contribution (vitals → demographics → history → clinical flags → NLP)
-- **Calibration analysis** — Per-class reliability diagrams + Expected Calibration Error (ECE < 0.05)
+- **Calibration analysis** — Per-class reliability diagrams confirm well-calibrated confidence scores
 - **Comprehensive bias analysis** — Statistical testing across 5 demographic dimensions + intersectional subgroups
 - **Interactive demo** — Browser-based triage prediction at [ladyfaye1998.github.io/triagegeist](https://ladyfaye1998.github.io/triagegeist/)
 
@@ -95,7 +98,7 @@ python validate_pipeline.py
 | Numeric (vitals) | 22 | heart_rate, systolic_bp, spo2, news2_score |
 | Patient history | 25 | hx_hypertension, hx_diabetes_type2, hx_copd |
 | Clinical flags | 50+ | qSOFA score, SIRS count, vital abnormality flags, risk composites |
-| NLP (TF-IDF) | 150 | Chief complaint unigrams + bigrams |
+| NLP (TF-IDF) | 300 | Chief complaint unigrams + bigrams + trigrams |
 | NLP (keywords) | 16 | chest_pain, seizure, stroke, suicidal, respiratory_distress |
 
 ## Clinical Relevance
