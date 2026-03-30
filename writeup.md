@@ -69,9 +69,9 @@ The ensemble achieves strong out-of-fold performance across all 80,000 training 
 
 | Metric | LightGBM | XGBoost | Ensemble |
 |:-------|:--------:|:-------:|:--------:|
-| Accuracy | 99.49% | 99.36% | 99.47% |
-| Weighted F1 | 99.49% | 99.36% | 99.47% |
-| Quadratic Weighted Kappa | 0.9975 | 0.9969 | 0.9974 |
+| Accuracy | 99.48% | 99.35% | 99.46% |
+| Weighted F1 | 99.48% | 99.34% | 99.46% |
+| Quadratic Weighted Kappa | 0.9975 | 0.9968 | 0.9974 |
 
 **Calibration analysis** shows the predicted probabilities are well-calibrated (Expected Calibration Error < 0.05), meaning a 70% confidence prediction corresponds to approximately 70% true positive rate. This is clinically essential: a nurse receiving a model prediction needs to trust the associated confidence level. We include per-class reliability diagrams showing calibration across all five ESI levels, with ESI 1 and ESI 5 (the extremes) showing the tightest calibration — exactly where clinical certainty matters most.
 
@@ -93,7 +93,7 @@ We perform comprehensive demographic bias analysis on OOF predictions across fiv
 
 **Undertriage monitoring** specifically tracks the rate at which truly high-acuity (ESI 1–2) patients are predicted as lower acuity. This is the most dangerous clinical error mode: a missed ESI 1 patient may arrest without intervention. Our model maintains ESI 1–2 undertriage at 0.37%, and overall undertriage at 0.39%.
 
-**Overtriage analysis** quantifies the opposite error — assigning higher acuity than warranted. While overtriage wastes resources, it is clinically safer than undertriage. Our model's overtriage rate remains below 1%, suggesting it would not significantly increase ED resource burden.
+**Overtriage analysis** quantifies the opposite error — assigning higher acuity than warranted. While overtriage wastes resources, it is clinically safer than undertriage. Our model's overtriage rate is just 0.14%, suggesting it would not significantly increase ED resource burden.
 
 In the Finnish healthcare context, where universal coverage eliminates insurance-driven access disparities, equity analysis centers on age, sex, and language — particularly relevant for immigrant populations navigating triage in a non-native language. The Foundation's focus on Nordic healthcare systems makes this bias-aware approach essential for responsible AI deployment in public health infrastructure.
 

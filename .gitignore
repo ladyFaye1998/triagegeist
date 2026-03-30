@@ -7,3 +7,5 @@ __pycache__/
 .env
 *.pkl
 *.joblib
+*.log
+fetch_log.py
