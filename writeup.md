@@ -44,13 +44,13 @@ We engineer 50+ clinically-motivated features grounded in emergency medicine lit
 
 To justify every component of our pipeline, we trained LightGBM models on cumulative feature subsets using 3-fold CV:
 
-| Feature Group | QWK |
-|:---|:---:|
-| Vitals only | ~0.98 |
-| + Demographics | ~0.99 |
-| + Patient history | ~0.993 |
-| + Clinical flags (qSOFA, SIRS) | ~0.995 |
-| + NLP (TF-IDF + keywords) | ~0.997 |
+| Feature Group | Features | QWK | Marginal Gain |
+|:---|:---:|:---:|:---:|
+| Vitals only | 22 | 0.9261 | — |
+| + Demographics | 34 | 0.9303 | +0.0042 |
+| + Patient history | 59 | 0.9305 | +0.0002 |
+| + Clinical flags (qSOFA, SIRS) | 126 | 0.9539 | +0.0235 |
+| + NLP (TF-IDF + keywords) | 276 | 0.9980 | +0.0441 |
 
 Each layer provides measurable improvement. Notably, clinical flags and NLP together contribute the marginal gains that separate a good model from a near-perfect one, validating our multi-modal approach.
 
@@ -79,7 +79,7 @@ The ensemble achieves strong out-of-fold performance across all 80,000 training 
 
 **Chief complaint NLP** contributes meaningful signal: keyword flags for cardiac symptoms, neurological presentations, and trauma rank among the top features, while TF-IDF features capture subtler textual patterns.
 
-**Undertriage safety**: overall undertriage rate is below 1%, and undertriage of critical ESI 1–2 patients is below 0.1% — well within clinically acceptable thresholds. The model's confidence on incorrect predictions is measurably lower than on correct ones, enabling a "flag for senior review" mechanism on low-confidence cases.
+**Undertriage safety**: overall undertriage rate is 0.39%, and undertriage of critical ESI 1–2 patients is 0.37% — well within clinically acceptable thresholds for a decision support tool. The model's confidence on incorrect predictions is measurably lower than on correct ones, enabling a "flag for senior review" mechanism on low-confidence cases.
 
 ## Bias Analysis
 
@@ -91,7 +91,7 @@ We perform comprehensive demographic bias analysis on OOF predictions across fiv
 
 **Intersectional analysis** identifies the highest-risk subgroups at the intersection of sex × age group × language — surfacing compound disadvantage invisible in single-dimension analysis. For example, elderly non-English-speaking females represent a clinically vulnerable intersection where triage errors have the highest morbidity impact.
 
-**Undertriage monitoring** specifically tracks the rate at which truly high-acuity (ESI 1–2) patients are predicted as lower acuity. This is the most dangerous clinical error mode: a missed ESI 1 patient may arrest without intervention. Our model maintains ESI 1–2 undertriage below 0.1%.
+**Undertriage monitoring** specifically tracks the rate at which truly high-acuity (ESI 1–2) patients are predicted as lower acuity. This is the most dangerous clinical error mode: a missed ESI 1 patient may arrest without intervention. Our model maintains ESI 1–2 undertriage at 0.37%, and overall undertriage at 0.39%.
 
 **Overtriage analysis** quantifies the opposite error — assigning higher acuity than warranted. While overtriage wastes resources, it is clinically safer than undertriage. Our model's overtriage rate remains below 1%, suggesting it would not significantly increase ED resource burden.
 

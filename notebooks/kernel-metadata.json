@@ -1,0 +1,16 @@
+{
+  "id": "ladyfaye/triagegeist-triage-acuity-prediction",
+  "title": "Triagegeist: Triage Acuity Prediction",
+  "code_file": "triagegeist-triage-acuity-prediction.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "competition_sources": ["triagegeist"],
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "model_sources": [],
+  "keywords": ["nlp", "xgboost", "lightgbm"]
+}
