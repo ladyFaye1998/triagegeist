@@ -217,7 +217,7 @@ test_xgb = np.zeros((len(X_test), N_CLASSES))
 
 print('\nXGBoost 5-fold CV:')
 for fold, (ti, vi) in enumerate(skf.split(X_train, y_train)):
-    m = xgb.XGBClassifier(**xgb_params)
+    m = xgb.XGBClassifier(**xgb_params, early_stopping_rounds=150)
     m.fit(X_train.iloc[ti], y_train[ti] - 1,
           eval_set=[(X_train.iloc[vi], y_train[vi] - 1)], verbose=False)
     oof_xgb[vi] = m.predict_proba(X_train.iloc[vi])
