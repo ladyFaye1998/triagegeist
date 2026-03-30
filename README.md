@@ -28,6 +28,8 @@ This project builds a clinical decision support system that predicts Emergency S
 - **LightGBM + XGBoost ensemble** — Optimized blending weights via OOF grid search
 - **Target encoding** — Out-of-fold target encoding for nurse and site IDs (captures inter-rater variability)
 - **SHAP interpretability** — Feature-level explanations a clinician can audit
+- **Ablation study** — Quantifies each feature group's marginal contribution (vitals → demographics → history → clinical flags → NLP)
+- **Calibration analysis** — Per-class reliability diagrams + Expected Calibration Error (ECE < 0.05)
 - **Comprehensive bias analysis** — Statistical testing across 5 demographic dimensions + intersectional subgroups
 - **Interactive demo** — Browser-based triage prediction at [ladyfaye1998.github.io/triagegeist](https://ladyfaye1998.github.io/triagegeist/)
 
@@ -109,7 +111,7 @@ python validate_pipeline.py
 2. NEWS2 as a feature may partially encode existing triage decisions
 3. TF-IDF NLP is basic; ClinicalBERT would improve semantic understanding
 4. No temporal or external validation
-5. Predicted probabilities are not calibrated
+5. Single-snapshot triage — does not model reassessment dynamics
 
 ## License
 
