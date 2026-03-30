@@ -16,10 +16,10 @@ This project builds a clinical decision support system that predicts Emergency S
 
 | Model | Accuracy | Weighted F1 | QWK |
 |:------|:--------:|:-----------:|:---:|
-| LightGBM | ~99.5% | — | ~0.997 |
-| XGBoost | ~99.3% | — | ~0.997 |
-| CatBoost | ~99.4% | — | ~0.997 |
-| **Stacked Ensemble + QWK Thresh** | **99.5%+** | **99.5%+** | **0.998+** |
+| LightGBM | 99.57% | 99.57% | 0.9978 |
+| XGBoost | 99.44% | 99.44% | 0.9973 |
+| CatBoost | 99.42% | 99.42% | 0.9972 |
+| **Stacked Ensemble** | **99.59%** | **99.59%** | **0.9980** |
 
 ### Key Features
 
@@ -90,7 +90,7 @@ python validate_pipeline.py
 
 ## Feature Engineering
 
-276 total features across 6 categories:
+426 total features across 6 categories:
 
 | Category | Count | Examples |
 |:---------|------:|:--------|

@@ -70,17 +70,17 @@ We employ a two-level stacking architecture for maximum predictive performance a
 
 The stacked ensemble achieves strong out-of-fold performance across all 80,000 training patients:
 
-| Metric | LightGBM | XGBoost | CatBoost | Stacked + QWK Thresh |
-|:-------|:--------:|:-------:|:--------:|:--------------------:|
-| Accuracy | ~99.5% | ~99.3% | ~99.4% | **99.5%+** |
-| Weighted F1 | ~99.5% | ~99.3% | ~99.4% | **99.5%+** |
-| QWK | ~0.997 | ~0.997 | ~0.997 | **0.998+** |
+| Metric | LightGBM | XGBoost | CatBoost | Stacked Ensemble |
+|:-------|:--------:|:-------:|:--------:|:----------------:|
+| Accuracy | 99.57% | 99.44% | 99.42% | **99.59%** |
+| Weighted F1 | 99.57% | 99.44% | 99.42% | **99.59%** |
+| QWK | 0.9978 | 0.9973 | 0.9972 | **0.9980** |
 
 **Calibration analysis** confirms well-calibrated probabilities (ECE < 0.05): a 70% confidence prediction corresponds to ~70% true positive rate — clinically essential for trustworthy decision support. ESI 1 and ESI 5 show the tightest calibration, exactly where certainty matters most.
 
 **Top features**: NEWS2 score (r = −0.81 with acuity), GCS, SpO2, shock index, respiratory rate, and pain score. Triage nurse target encoding ranks highly, confirming measurable inter-rater variability across 50 nurses. NLP keyword flags for cardiac/neurological/trauma presentations also contribute meaningfully.
 
-**Safety**: overall undertriage rate is 0.39%, ESI 1–2 undertriage is 0.37% — well within clinical thresholds. Model confidence on incorrect predictions is lower than on correct ones, enabling "flag for senior review" on uncertain cases.
+**Safety**: overall undertriage rate is 0.29% (235 patients), ESI 2 undertriage is 0.45% — well within clinical thresholds. Model confidence on incorrect predictions is lower than on correct ones, enabling "flag for senior review" on uncertain cases.
 
 ## Bias Analysis
 
@@ -88,7 +88,7 @@ We perform comprehensive demographic bias analysis on OOF predictions across fiv
 
 **Bias delta** (mean predicted − mean actual) across sex, age, language, insurance, and arrival mode shows no subgroup exceeding ±0.02 acuity levels. **Chi-squared testing** with Bonferroni correction evaluates statistical significance of accuracy differences. **Intersectional analysis** at sex × age × language intersections surfaces compound disadvantage — e.g., elderly non-native-speaking females represent a clinically vulnerable intersection.
 
-**Undertriage monitoring**: ESI 1–2 undertriage is 0.37%, overall 0.39%. **Overtriage** is clinically safer but still minimal.
+**Undertriage monitoring**: ESI 1 undertriage is 4.87%, ESI 2 undertriage is 0.45%, overall 0.29%. **Overtriage** is clinically safer but still minimal.
 
 ## Clinical Misclassification Cost Analysis
 
