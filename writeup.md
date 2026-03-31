@@ -34,7 +34,7 @@ We engineer 50+ clinically-motivated features grounded in emergency medicine lit
 
 **Age-vital interactions.** Features such as `age × shock_index`, `age × NEWS2`, and `age × qSOFA` capture the clinical principle that elderly patients decompensate faster for equivalent vital sign derangements — a 35-year-old with a shock index of 1.0 has a different prognosis than an 85-year-old with the same value.
 
-**NLP pipeline.** Two complementary approaches extract signal from chief complaint text: (1) TF-IDF encoding (300 features, unigrams + bigrams + trigrams, sublinear term frequency, min_df=5) captures the full statistical text signal, and (2) 16 clinically-curated keyword regex patterns detect high-risk presentations that should trigger higher acuity, including chest pain, seizure, stroke, suicidal ideation, respiratory distress, and GI bleeding. Patients matching "mild" keywords (advice, prescription refill, follow-up) are flagged separately.
+**NLP pipeline.** Two complementary approaches extract signal from chief complaint text: (1) TF-IDF encoding (500 features, unigrams + bigrams + trigrams, sublinear term frequency, min_df=3) captures the full statistical text signal, and (2) 16 clinically-curated keyword regex patterns detect high-risk presentations that should trigger higher acuity, including chest pain, seizure, stroke, suicidal ideation, respiratory distress, and GI bleeding. Patients matching "mild" keywords (advice, prescription refill, follow-up) are flagged separately.
 
 **Target-encoded identifiers.** Out-of-fold target encoding for the 50 triage nurses and 5 site IDs captures systematic inter-rater variability without introducing data leakage — a feature that directly models the clinical problem this tool aims to address.
 
