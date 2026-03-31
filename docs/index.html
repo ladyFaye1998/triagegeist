@@ -87,7 +87,7 @@
     <h1><span>Triagegeist</span> — AI Emergency Triage</h1>
     <p>Interactive clinical decision support demo. Enter patient data to predict ESI triage acuity.</p>
     <div class="badges">
-      <span class="badge">Stacked Triple-Boost Ensemble</span>
+      <span class="badge">Hybrid Tree–Neural Ensemble</span>
       <span class="badge green">99.68% Accuracy</span>
       <span class="badge">0.98+ QWK</span>
       <span class="badge red">Bias Monitoring</span>
@@ -232,7 +232,7 @@
 
   <div class="methodology">
     <h2>How It Works</h2>
-    <p>This demo simulates the ensemble model's decision process using a rule-based approximation of the trained LightGBM + XGBoost + CatBoost stacked pipeline. The actual model uses 600+ features including 500 TF-IDF NLP trigrams — this interactive version uses the top clinical predictors.</p>
+    <p>This demo simulates the ensemble model's decision process using a rule-based approximation of the trained LightGBM + XGBoost + CatBoost + MLP hybrid stacked pipeline. The actual model uses 820+ features including 700 dual-channel TF-IDF features (word + character n-grams) — this interactive version uses the top clinical predictors.</p>
     <table>
       <tr><th>Component</th><th>Details</th></tr>
       <tr><td>Models</td><td>LightGBM + XGBoost + CatBoost → LR meta-learner, 5-fold stratified CV</td></tr>

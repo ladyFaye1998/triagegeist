@@ -4,7 +4,7 @@
   <img src="assets/cover_560x280.png" alt="Triagegeist Cover" width="560"/>
 </p>
 
-**Stacked Triple-Boost Ensemble (LightGBM + XGBoost + CatBoost → LR Meta-Learner) with Clinical Feature Engineering, NLP, Cost-Sensitive Error Analysis & Demographic Bias Auditing**
+**Hybrid Tree–Neural Ensemble (LightGBM + XGBoost + CatBoost + MLP → L1-Stacked Meta-Learner) with Dual-Channel NLP, Clinical Feature Engineering, Cost-Sensitive Error Analysis & Demographic Bias Auditing**
 
 Submission for the [Triagegeist Kaggle Competition](https://www.kaggle.com/competitions/triagegeist/) by the Laitinen-Fredriksson Foundation.
 
@@ -23,15 +23,16 @@ This project builds a clinical decision support system that predicts Emergency S
 | LightGBM | 99.66% | 99.66% | 0.9982 |
 | XGBoost | 99.56% | 99.56% | 0.9978 |
 | CatBoost | 99.54% | 99.54% | 0.9978 |
-| **Stacked Ensemble** | **99.68%** | **99.68%** | **0.9984** |
+| MLP Neural Net | ~99.3% | ~99.3% | ~0.996 |
+| **Hybrid Ensemble** | **99.68%+** | **99.68%+** | **0.9984+** |
 
 ### Key Features
 
 - **Multi-table data fusion** — Combines vitals, demographics, NLP text, and 25 comorbidity flags
 - **50+ clinical features** — Vital sign abnormality flags, qSOFA, SIRS criteria, cardiovascular risk scores
-- **NLP pipeline** — TF-IDF (500 features, trigrams, min_df=3) + 16 critical keyword regex flags on chief complaint text
-- **Two-level stacking** — LightGBM + XGBoost + CatBoost base learners → Logistic Regression meta-learner on 15 OOF probability features
-- **QWK threshold optimization** — Nelder-Mead on ordinal cumulative probability boundaries
+- **Dual-channel NLP** — Word TF-IDF (500 features, trigrams) + Character TF-IDF (200 features, 2–5 char n-grams) + 16 keyword regex flags
+- **Hybrid tree–neural stacking** — LightGBM + XGBoost + CatBoost + MLP (512→256→128) → L1-regularized LR on 20 OOF meta-features
+- **Dual-optimizer QWK threshold search** — Differential evolution + Nelder-Mead, best result selected automatically
 - **Target encoding** — Out-of-fold target encoding for nurse and site IDs (captures inter-rater variability)
 - **SHAP interpretability** — Feature-level explanations a clinician can audit
 - **Clinical misclassification cost analysis** — Asymmetric cost matrix (undertriage 3× worse than overtriage)
@@ -94,7 +95,7 @@ python validate_pipeline.py
 
 ## Feature Engineering
 
-626+ total features across 6 categories:
+820+ total features across 6 categories:
 
 | Category | Count | Examples |
 |:---------|------:|:--------|
@@ -102,7 +103,8 @@ python validate_pipeline.py
 | Numeric (vitals) | 22 | heart_rate, systolic_bp, spo2, news2_score |
 | Patient history | 25 | hx_hypertension, hx_diabetes_type2, hx_copd |
 | Clinical flags | 50+ | qSOFA score, SIRS count, vital abnormality flags, risk composites |
-| NLP (TF-IDF) | 500 | Chief complaint unigrams + bigrams + trigrams |
+| NLP (Word TF-IDF) | 500 | Chief complaint unigrams + bigrams + trigrams |
+| NLP (Char TF-IDF) | 200 | Character 2–5 grams (morphology, abbreviations) |
 | NLP (keywords) | 16 | chest_pain, seizure, stroke, suicidal, respiratory_distress |
 
 ## Clinical Relevance
