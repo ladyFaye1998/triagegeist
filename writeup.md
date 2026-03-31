@@ -72,9 +72,9 @@ The stacked ensemble achieves strong out-of-fold performance across all 80,000 t
 
 | Metric | LightGBM | XGBoost | CatBoost | Stacked Ensemble |
 |:-------|:--------:|:-------:|:--------:|:----------------:|
-| Accuracy | 99.57% | 99.44% | 99.42% | **99.59%** |
-| Weighted F1 | 99.57% | 99.44% | 99.42% | **99.59%** |
-| QWK | 0.9978 | 0.9973 | 0.9972 | **0.9980** |
+| Accuracy | 99.66% | 99.56% | 99.54% | **99.68%** |
+| Weighted F1 | 99.66% | 99.56% | 99.54% | **99.68%** |
+| QWK | 0.9982 | 0.9978 | 0.9978 | **0.9984** |
 
 **Calibration analysis** confirms well-calibrated probabilities (ECE < 0.05): a 70% confidence prediction corresponds to ~70% true positive rate — clinically essential for trustworthy decision support. ESI 1 and ESI 5 show the tightest calibration, exactly where certainty matters most.
 

@@ -20,10 +20,10 @@ This project builds a clinical decision support system that predicts Emergency S
 
 | Model | Accuracy | Weighted F1 | QWK |
 |:------|:--------:|:-----------:|:---:|
-| LightGBM | 99.57% | 99.57% | 0.9978 |
-| XGBoost | 99.44% | 99.44% | 0.9973 |
-| CatBoost | 99.42% | 99.42% | 0.9972 |
-| **Stacked Ensemble** | **99.59%** | **99.59%** | **0.9980** |
+| LightGBM | 99.66% | 99.66% | 0.9982 |
+| XGBoost | 99.56% | 99.56% | 0.9978 |
+| CatBoost | 99.54% | 99.54% | 0.9978 |
+| **Stacked Ensemble** | **99.68%** | **99.68%** | **0.9984** |
 
 ### Key Features
 
