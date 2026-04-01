@@ -61,7 +61,7 @@ We employ a two-level stacking architecture that combines tree-based and neural 
 - **LightGBM**: 3,000 estimators, learning rate 0.03, 127 leaves. Leaf-wise growth excels on sparse TF-IDF features.
 - **XGBoost**: 2,000 estimators, learning rate 0.03, max depth 8. Level-wise growth provides complementary regularization.
 - **CatBoost**: 2,000 iterations, learning rate 0.05, depth 8. Symmetric trees with ordered target statistics provide a third complementary boundary.
-- **MLP Neural Network**: 3-layer architecture (512→256→128), ReLU activation, Adam optimizer with adaptive learning rate. Captures smooth, non-axis-aligned decision boundaries that tree models inherently cannot represent — adding genuine architectural diversity rather than three variations of the same algorithm.
+- **MLP Neural Network**: 3-layer architecture (256→128→64), ReLU activation, Adam optimizer with adaptive learning rate. Captures smooth, non-axis-aligned decision boundaries that tree models inherently cannot represent — adding genuine architectural diversity rather than three variations of the same algorithm.
 
 **Level-2 Meta-Learner**: An L1-regularized (Lasso) Logistic Regression with cross-validated regularization strength, trained on the 20-dimensional OOF probability matrix (5 classes × 4 models). L1 sparsity automatically identifies which base model is most informative for each class, learning optimal cross-architecture complementarity.
 
