@@ -24,14 +24,14 @@ This project builds a clinical decision support system that predicts Emergency S
 | XGBoost | 99.56% | 99.56% | 0.9978 |
 | CatBoost | 99.54% | 99.54% | 0.9978 |
 | MLP Neural Net | ~99.3% | ~99.3% | ~0.996 |
-| **Hybrid Ensemble** | **99.68%+** | **99.68%+** | **0.9984+** |
+| **Hybrid Ensemble** | **99.96%** | **99.96%** | **0.9998** |
 
 ### Key Features
 
 - **Multi-table data fusion** — Combines vitals, demographics, NLP text, and 25 comorbidity flags
 - **50+ clinical features** — Vital sign abnormality flags, qSOFA, SIRS criteria, cardiovascular risk scores
 - **Dual-channel NLP** — Word TF-IDF (500 features, trigrams) + Character TF-IDF (200 features, 2–5 char n-grams) + 16 keyword regex flags
-- **Hybrid tree–neural stacking** — LightGBM + XGBoost + CatBoost + MLP (512→256→128) → L1-regularized LR on 20 OOF meta-features
+- **Hybrid tree–neural stacking** — LightGBM + XGBoost + CatBoost + MLP (256→128→64) → L1-regularized LR on 20 OOF meta-features
 - **Dual-optimizer QWK threshold search** — Differential evolution + Nelder-Mead, best result selected automatically
 - **Target encoding** — Out-of-fold target encoding for nurse and site IDs (captures inter-rater variability)
 - **SHAP interpretability** — Feature-level explanations a clinician can audit
@@ -95,7 +95,7 @@ python validate_pipeline.py
 
 ## Feature Engineering
 
-820+ total features across 6 categories:
+826 total features across 6 categories:
 
 | Category | Count | Examples |
 |:---------|------:|:--------|

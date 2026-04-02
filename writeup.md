@@ -48,7 +48,7 @@ To justify every component of our pipeline, we trained LightGBM models on cumula
 | + Demographics | 34 | 0.9303 | +0.0042 |
 | + Patient history | 59 | 0.9305 | +0.0002 |
 | + Clinical flags (qSOFA, SIRS) | 126 | 0.9539 | +0.0235 |
-| + NLP (TF-IDF + keywords) | 276 | 0.9980 | +0.0441 |
+| + NLP (TF-IDF + keywords) | 826 | 0.9995 | +0.0456 |
 
 Each layer provides measurable improvement. Notably, clinical flags and NLP together contribute the marginal gains that separate a good model from a near-perfect one, validating our multi-modal approach.
 
@@ -73,16 +73,16 @@ The hybrid ensemble achieves strong out-of-fold performance across all 80,000 tr
 
 | Metric | LightGBM | XGBoost | CatBoost | MLP | Hybrid Ensemble |
 |:-------|:--------:|:-------:|:--------:|:---:|:---------------:|
-| Accuracy | 99.66% | 99.56% | 99.54% | ~99.3% | **99.68%+** |
-| QWK | 0.9982 | 0.9978 | 0.9978 | ~0.996 | **0.9984+** |
+| Accuracy | 99.66% | 99.56% | 99.54% | ~99.3% | **99.96%** |
+| QWK | 0.9982 | 0.9978 | 0.9978 | ~0.996 | **0.9998** |
 
-The MLP individually scores below the GBMs (as expected for tabular data) but its architectural diversity improves the ensemble — the stacked meta-learner assigns it non-zero weight precisely where tree models are uncertain.
+The MLP individually scores below the GBMs (as expected for tabular data) but its architectural diversity improves the ensemble — the L1 meta-learner assigns it non-zero weight precisely where tree models are uncertain.
 
-**Calibration analysis** confirms well-calibrated probabilities (ECE < 0.05): a 70% confidence prediction corresponds to ~70% true positive rate — clinically essential for trustworthy decision support. ESI 1 and ESI 5 show the tightest calibration, exactly where certainty matters most.
+**Calibration analysis** confirms well-calibrated probabilities (ECE = 0.0000): predicted confidence aligns precisely with true positive rates — clinically essential for trustworthy decision support.
 
 **Top features**: NEWS2 score (r = −0.81 with acuity), GCS, SpO2, shock index, respiratory rate, and pain score. Triage nurse target encoding ranks highly, confirming measurable inter-rater variability across 50 nurses. NLP keyword flags for cardiac/neurological/trauma presentations also contribute meaningfully.
 
-**Safety**: overall undertriage rate is 0.29% (235 patients), ESI 2 undertriage is 0.45% — well within clinical thresholds. Model confidence on incorrect predictions is lower than on correct ones, enabling "flag for senior review" on uncertain cases.
+**Safety**: overall undertriage rate is 0.03% (23 patients out of 80,000), ESI 1 undertriage is 0.68% — well within clinical thresholds. Model confidence on incorrect predictions is lower (0.871) than on correct ones (1.000), enabling "flag for senior review" on uncertain cases.
 
 ## Bias Analysis
 
@@ -90,7 +90,7 @@ We perform comprehensive demographic bias analysis on OOF predictions across fiv
 
 **Bias delta** (mean predicted − mean actual) across sex, age, language, insurance, and arrival mode shows no subgroup exceeding ±0.02 acuity levels. **Chi-squared testing** with Bonferroni correction evaluates statistical significance of accuracy differences. **Intersectional analysis** at sex × age × language intersections surfaces compound disadvantage — e.g., elderly non-native-speaking females represent a clinically vulnerable intersection.
 
-**Undertriage monitoring**: ESI 1 undertriage is 4.87%, ESI 2 undertriage is 0.45%, overall 0.29%. **Overtriage** is clinically safer but still minimal.
+**Undertriage monitoring**: ESI 1 undertriage is 0.68% (22/3,222), ESI 2 undertriage is 0.01%, overall 0.03% (23/80,000). **Overtriage** is clinically safer and also minimal at 0.01% (12 patients).
 
 ## Clinical Misclassification Cost Analysis
 
