@@ -8,7 +8,7 @@
 
 Submission for the [Triagegeist Kaggle Competition](https://www.kaggle.com/competitions/triagegeist/) by the Laitinen-Fredriksson Foundation.
 
-**[Live Demo](https://ladyfaye1998.github.io/triagegeist/)** | **[Kaggle Notebook](https://www.kaggle.com/code/ladyfaye/triagegeist-triage-acuity-prediction)** | **[Writeup](writeup.md)**
+**[Live Demo](https://ladyfaye1998.github.io/triagegeist/)** | **[Kaggle Notebook](https://www.kaggle.com/code/ladyfaye/triagegeist-triage-acuity-prediction)**
 
 ---
 

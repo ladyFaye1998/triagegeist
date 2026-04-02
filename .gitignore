@@ -9,3 +9,4 @@ __pycache__/
 *.joblib
 *.log
 fetch_log.py
+writeup.md
